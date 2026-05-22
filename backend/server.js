@@ -9,6 +9,9 @@ require('./config/associations');
 
 const app = express();
 
+// Trust Railway/Render/Heroku proxy
+app.set('trust proxy', 1);
+
 // ─── Security Headers ────────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
