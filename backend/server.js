@@ -20,7 +20,7 @@ app.use(helmet({
       scriptSrc:  ["'self'"],
       styleSrc:   ["'self'", "'unsafe-inline'"],
       imgSrc:     ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "https://pyfitness.netlify.app"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -28,7 +28,6 @@ app.use(helmet({
 
 // ─── Prevent parameter pollution ─────────────────────────────────────────────
 app.use((req, res, next) => {
-  // Strip any $ or . from query params to prevent NoSQL-style injection
   if (req.query) {
     for (const key in req.query) {
       if (typeof req.query[key] === 'string') {
@@ -41,7 +40,7 @@ app.use((req, res, next) => {
 
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 200,
   message: { message: 'Too many requests, please try again later.' },
   standardHeaders: true,
@@ -50,7 +49,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20, // stricter for login/register
+  max: 20,
   message: { message: 'Too many auth attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -59,21 +58,28 @@ const authLimiter = rateLimit({
 app.use(globalLimiter);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000').split(',');
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://pyfitness.netlify.app',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : [])
+];
+
+// Handle OPTIONS preflight explicitly
+app.options('*', cors());
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    // Allow localhost on any port during development
-    if (process.env.NODE_ENV !== 'production') return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // ─── Body Parser ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10kb' })); // prevent large payload attacks
+app.use(express.json({ limit: '10kb' }));
 
 // ─── Connect DB ──────────────────────────────────────────────────────────────
 connectDB();
