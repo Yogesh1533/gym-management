@@ -80,8 +80,14 @@ Resources:
           #!/bin/bash
           set -euxo pipefail
           exec > /var/log/py-fitness-setup.log 2>&1
-          # Report failure to CloudFormation straight away instead of waiting for the timeout
-          trap '/opt/aws/bin/cfn-signal -e 1 --stack ${AWS::StackName} --resource AppInstance --region ${AWS::Region}' ERR
+          # cfn-signal reports success/failure back to CloudFormation
+          dnf install -y aws-cfn-bootstrap || true
+          # On any error, send the failing line and the end of the log so it shows in the stack events
+          fail() {
+            REASON="Setup failed at line $1: $(tail -n 5 /var/log/py-fitness-setup.log | tr '\n"' ' ' | cut -c1-900)"
+            /opt/aws/bin/cfn-signal -e 1 --reason "$REASON" --stack ${AWS::StackName} --resource AppInstance --region ${AWS::Region}
+          }
+          trap 'fail $LINENO' ERR
 
           # 2 GB swap so the React build fits in 1 GB of RAM
           if [ ! -f /swapfile ]; then
@@ -178,8 +184,7 @@ Resources:
             sleep 5
           done
           curl -sf http://127.0.0.1:5000/api/health
-          /opt/aws/bin/cfn-signal -e 0 --stack ${AWS::StackName} --resource AppInstance --region ${AWS::Region} \
-            || { dnf install -y aws-cfn-bootstrap && /opt/aws/bin/cfn-signal -e 0 --stack ${AWS::StackName} --resource AppInstance --region ${AWS::Region}; }
+          /opt/aws/bin/cfn-signal -e 0 --stack ${AWS::StackName} --resource AppInstance --region ${AWS::Region}
 
   ZeroSpendBudget:
     Type: AWS::Budgets::Budget
