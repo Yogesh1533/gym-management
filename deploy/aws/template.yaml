@@ -79,7 +79,8 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           set -euxo pipefail
-          exec > /var/log/py-fitness-setup.log 2>&1
+          # Log to a file and to the serial console (readable with "aws ec2 get-console-output")
+          exec > >(tee -a /var/log/py-fitness-setup.log > /dev/console) 2>&1
           # cfn-signal reports success/failure back to CloudFormation
           dnf install -y aws-cfn-bootstrap || true
           # On any error, send the failing line and the end of the log so it shows in the stack events
@@ -124,13 +125,16 @@ Resources:
           sudo -u gym npm ci
           sudo -u gym env INLINE_RUNTIME_CHUNK=false GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true NODE_OPTIONS=--max-old-space-size=1536 npm run build
 
+          # Random secret from the kernel (openssl is not always installed on Amazon Linux)
+          JWT_SECRET=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
+          [ ${!#JWT_SECRET} -eq 64 ]
           if [ ! -f /opt/gym/app/backend/.env ]; then
             cat > /opt/gym/app/backend/.env <<ENV
           NODE_ENV=production
           PORT=5000
           DB_DIALECT=sqlite
           DB_STORAGE=/opt/gym/data/gym.sqlite
-          JWT_SECRET=$(openssl rand -hex 32)
+          JWT_SECRET=$JWT_SECRET
           JWT_EXPIRE=7d
           AUTO_SEED=true
           DEMO_RESET_HOURS=${DemoResetHours}
