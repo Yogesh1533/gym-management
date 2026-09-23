@@ -45,6 +45,10 @@ npm start                       # API on http://localhost:5000, demo data seeded
 cd ../frontend && npm install && npm start   # app on http://localhost:3000
 ```
 
+> **Newer npm (v11+) blocks install scripts.** If `npm start` fails with *"Could not locate the bindings file"* for sqlite3, run
+> `npm install-scripts approve sqlite3 && npm rebuild sqlite3` in `backend/`.
+> **On macOS**, port 5000 is taken by AirPlay Receiver (the browser shows "Access denied"), so add `PORT=5050` to `backend/.env`.
+
 For a production-style single server, run `npm run build` in `frontend/`. The backend then serves the built app itself at http://localhost:5000.
 
 ---
