@@ -190,6 +190,26 @@ const runTests = async () => {
     assert('Cannot book same session twice', res.status === 400);
   }
 
+  // Cancelling and re-booking the same session must work
+  if (bookingId) {
+    res = await request('PUT', `/api/bookings/${bookingId}/cancel`, null, memberToken);
+    assert('Cancel booking succeeds', res.status === 200);
+    res = await request('POST', '/api/bookings', { sessionId }, memberToken);
+    assert('Can re-book a cancelled session', res.status === 201);
+  }
+
+  // Membership session limits are enforced (Mike is on Starter: 2 bookings/month)
+  res = await request('POST', '/api/auth/login', { email: 'mike@gym.com', password: 'member123' });
+  const mikeToken = res.body.token;
+  const upcoming = (await request('GET', '/api/sessions', null, mikeToken)).body;
+  if (mikeToken && upcoming.length >= 3) {
+    const statuses = [];
+    for (const s of upcoming.slice(0, 3))
+      statuses.push((await request('POST', '/api/bookings', { sessionId: s.id }, mikeToken)).status);
+    assert('Starter plan allows 2 bookings', statuses[0] !== 403 && statuses[1] !== 403, statuses.join(','));
+    assert('Starter plan blocks the 3rd booking', statuses[2] === 403, statuses.join(','));
+  }
+
   // Test 22: Get my bookings
   res = await request('GET', '/api/bookings/my', null, memberToken);
   assert('GET my bookings succeeds', res.status === 200);
@@ -206,7 +226,7 @@ const runTests = async () => {
   // Test 24: Get notifications
   res = await request('GET', '/api/notifications', null, memberToken);
   assert('GET notifications succeeds', res.status === 200);
-  assert('Notifications is an array', Array.isArray(res.body));
+  assert('Notifications list is an array', Array.isArray(res.body.notifications));
 
   // Test 25: Get unread count
   res = await request('GET', '/api/notifications/unread-count', null, memberToken);
@@ -339,6 +359,13 @@ const runTests = async () => {
   assert('Generate plan succeeds for member with stats', res.status === 200);
   assert('Generated plan has BMI', !!res.body.bmi);
   assert('Generated plan has bmiCategory', !!res.body.bmiCategory);
+
+  // Registration form sends blank optional fields as empty strings
+  res = await request('POST', '/api/auth/register', {
+    name: 'Blank Fields', email: `blank${Date.now()}@test.com`, password: 'secret123',
+    phone: '', age: '', weight: '', height: '', fitnessGoal: 'general_fitness'
+  });
+  assert('Register succeeds with blank optional fields', res.status === 201, JSON.stringify(res.body));
 
   // ── PRINT RESULTS ───────────────────────────────────────────────────────────
   console.log('\n================================');

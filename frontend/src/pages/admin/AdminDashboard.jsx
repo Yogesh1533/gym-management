@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api';
 import StatCard from '../../components/shared/StatCard';
 import { Users, Calendar, Dumbbell, Apple, BookOpen, TrendingUp } from 'lucide-react';
+import { formatShortDate } from '../../utils/date';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
                     <p className="font-medium text-white text-sm">{b.member?.name}</p>
                     <p className="text-xs text-zinc-500">{b.session?.title}</p>
                   </div>
-                  <span className="text-xs text-zinc-500">{new Date(b.session?.date).toLocaleDateString()}</span>
+                  <span className="text-xs text-zinc-500">{formatShortDate(b.session?.date)}</span>
                 </div>
               ))}
             </div>
@@ -70,7 +71,7 @@ export default function AdminDashboard() {
                     <p className="text-xs text-zinc-500">{s.trainer} · {s.startTime}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-zinc-500">{new Date(s.date).toLocaleDateString()}</p>
+                    <p className="text-xs text-zinc-500">{formatShortDate(s.date)}</p>
                     <p className="text-xs text-cyan-400">{s.totalSlots - s.bookedSlots} slots left</p>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import { Calendar, Clock, MapPin, User, Users } from 'lucide-react';
+import { formatDate } from '../../utils/date';
 
 const typeColors = {
   hiit: 'bg-red-500/10 text-red-400',
@@ -32,7 +33,7 @@ export default function SessionCard({ session, onBook, booked, waitlisted, loadi
         </div>
         <div className="flex items-center gap-2">
           <Calendar size={14} className="text-cyan-400" />
-          <span>{new Date(session.date).toDateString()}</span>
+          <span>{formatDate(session.date)}</span>
         </div>
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-cyan-400" />

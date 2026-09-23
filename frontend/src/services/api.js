@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api' });
+// Defaults to the same origin: in production Express serves the built app and the API
+// together, and in development the CRA "proxy" setting forwards /api to localhost:5000.
+const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || '/api' });
 
 // Attach JWT token to every request automatically
 api.interceptors.request.use((config) => {
@@ -13,10 +15,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    // A 401 from the login form itself just means wrong credentials — don't redirect
+    const isAuthCall = err.config?.url?.startsWith('/auth/login') || err.config?.url?.startsWith('/auth/register');
+    if (err.response?.status === 401 && !isAuthCall) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') window.location.href = '/login';
     }
     return Promise.reject(err);
   }

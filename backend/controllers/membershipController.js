@@ -63,7 +63,7 @@ const getMyMembership = async (req, res) => {
     if (plan && plan.sessionLimit !== -1) {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
       sessionsUsed = await Booking.count({
-        where: { memberId: req.user.id, createdAt: { [Op.gte]: startOfMonth } }
+        where: { memberId: req.user.id, status: { [Op.ne]: 'cancelled' }, createdAt: { [Op.gte]: startOfMonth } }
       });
       sessionsRemaining = Math.max(0, plan.sessionLimit - sessionsUsed);
     }

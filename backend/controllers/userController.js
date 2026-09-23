@@ -26,7 +26,16 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, phone, age, weight, height, fitnessGoal } = req.body;
+    const { name, phone, fitnessGoal } = req.body;
+    // Empty form fields arrive as '' — store them as null rather than invalid numbers
+    const num = (v, parse) => (v === undefined ? undefined : v === '' || v === null ? null : parse(v));
+    const age    = num(req.body.age, parseInt);
+    const weight = num(req.body.weight, parseFloat);
+    const height = num(req.body.height, parseFloat);
+    if (name !== undefined && !String(name).trim())
+      return res.status(400).json({ message: 'Name is required' });
+    if ([age, weight, height].some(v => v !== undefined && v !== null && Number.isNaN(v)))
+      return res.status(400).json({ message: 'Age, weight and height must be numbers' });
     await User.update({ name, phone, age, weight, height, fitnessGoal }, { where: { id: req.user.id } });
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ['password'] },

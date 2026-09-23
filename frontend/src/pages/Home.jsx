@@ -87,7 +87,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-black text-zinc-600 text-center py-6 text-sm border-t border-zinc-800">
-        © 2024 PY Fitness Gym Management System. Built for university capstone demonstration.
+        © {new Date().getFullYear()} PY Fitness Gym Management System. Built for university capstone demonstration.
       </footer>
     </div>
   );

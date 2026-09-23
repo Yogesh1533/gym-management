@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { bookingAPI, ratingAPI } from '../../services/api';
 import { Calendar, Clock, MapPin, User, X, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '../../utils/date';
 
 const statusColors = {
   confirmed: 'bg-emerald-500/10 text-emerald-400',
@@ -135,7 +136,7 @@ export default function BookingHistory() {
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-zinc-500">
                   <span className="flex items-center gap-1"><User size={13} className="text-cyan-400" />{b.session?.trainer}</span>
-                  <span className="flex items-center gap-1"><Calendar size={13} className="text-cyan-400" />{new Date(b.session?.date).toDateString()}</span>
+                  <span className="flex items-center gap-1"><Calendar size={13} className="text-cyan-400" />{formatDate(b.session?.date)}</span>
                   <span className="flex items-center gap-1"><Clock size={13} className="text-cyan-400" />{b.session?.startTime} – {b.session?.endTime}</span>
                   <span className="flex items-center gap-1"><MapPin size={13} className="text-cyan-400" />{b.session?.location}</span>
                 </div>

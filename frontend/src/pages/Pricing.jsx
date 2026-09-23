@@ -128,7 +128,7 @@ export default function Pricing() {
       </section>
 
       <footer className="bg-black text-zinc-600 text-center py-6 text-sm border-t border-zinc-800">
-        © 2024 PY Fitness Gym Management System.
+        © {new Date().getFullYear()} PY Fitness Gym Management System.
       </footer>
     </div>
   );

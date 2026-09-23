@@ -7,8 +7,8 @@ const { protect } = require('../middleware/auth');
 router.get('/', protect, async (req, res) => {
   try {
     const sessions = await Session.findAll({
-      where: { isActive: true, date: { [Op.gte]: new Date() } },
-      order: [['date', 'ASC']]
+      where: { isActive: true, date: { [Op.gte]: new Date().toISOString().split('T')[0] } },
+      order: [['date', 'ASC'], ['startTime', 'ASC']]
     });
     res.json(sessions);
   } catch (err) {

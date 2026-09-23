@@ -19,7 +19,7 @@ export default function Sessions() {
     Promise.all([sessionAPI.getUpcoming(), bookingAPI.getMyBookings(), bookingAPI.getMyWaitlist()])
       .then(([s, b, w]) => {
         setSessions(s.data);
-        setMyBookings(b.data.map(bk => bk.session?.id).filter(Boolean));
+        setMyBookings(b.data.filter(bk => bk.status !== 'cancelled').map(bk => bk.sessionId));
         setMyWaitlist(w.data.map(wl => wl.sessionId));
       })
       .finally(() => setLoading(false));

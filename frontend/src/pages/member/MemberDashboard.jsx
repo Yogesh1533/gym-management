@@ -6,6 +6,7 @@ import StatCard from '../../components/shared/StatCard';
 import MembershipCard from '../../components/member/MembershipCard';
 import { Calendar, Dumbbell, Apple, Clock, ChevronRight, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '../../utils/date';
 
 const goalLabels = {
   weight_loss: 'Weight Loss', muscle_gain: 'Muscle Gain',
@@ -37,7 +38,12 @@ export default function MemberDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const upcomingBookings = bookings.filter(b => b.status === 'confirmed').slice(0, 3);
+  const today = new Date().toISOString().split('T')[0];
+  const upcomingBookings = bookings
+    .filter(b => b.status === 'confirmed' && String(b.session?.date) >= today)
+    .sort((a, b) => String(a.session?.date).localeCompare(String(b.session?.date)))
+    .slice(0, 3);
+  const bookedSessionIds = new Set(bookings.filter(b => b.status !== 'cancelled').map(b => b.sessionId));
   const attendedCount = bookings.filter(b => b.status === 'attended').length;
   const streak = bookings.filter(b => b.status === 'attended' || b.status === 'confirmed').length;
 
@@ -329,7 +335,7 @@ export default function MemberDashboard() {
                 <div key={b.id} className="bg-cyan-500/5 rounded-xl p-3 border border-cyan-500/20">
                   <p className="font-semibold text-white text-sm">{b.session?.title}</p>
                   <p className="text-xs text-zinc-500 mt-1">
-                    {new Date(b.session?.date).toDateString()} · {b.session?.startTime}
+                    {formatDate(b.session?.date)} · {b.session?.startTime}
                   </p>
                   <p className="text-xs text-cyan-400 mt-1">👤 {b.session?.trainer}</p>
                 </div>
@@ -364,16 +370,22 @@ export default function MemberDashboard() {
                     <div>
                       <p className="font-bold text-white">{s.title}</p>
                       <p className="text-sm text-zinc-500 mt-1">👤 {s.trainer}</p>
-                      <p className="text-sm text-zinc-500">📅 {new Date(s.date).toDateString()}</p>
+                      <p className="text-sm text-zinc-500">📅 {formatDate(s.date)}</p>
                       <p className="text-sm text-zinc-500">🕐 {s.startTime}</p>
                     </div>
                     <span className="badge bg-emerald-500/10 text-emerald-400 text-xs">
                       {s.totalSlots - s.bookedSlots} left
                     </span>
                   </div>
-                  <Link to="/sessions" className="btn-primary w-full text-center text-sm mt-3 block py-2">
-                    Book Now
-                  </Link>
+                  {bookedSessionIds.has(s.id) ? (
+                    <p className="w-full text-center text-sm mt-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      ✓ Booked
+                    </p>
+                  ) : (
+                    <Link to="/sessions" className="btn-primary w-full text-center text-sm mt-3 block py-2">
+                      Book Now
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

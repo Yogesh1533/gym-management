@@ -60,7 +60,9 @@ const updateMember = async (req, res) => {
     if (workoutPlan !== undefined) updateData.workoutPlanId = workoutPlan ? parseInt(workoutPlan) : null;
     if (dietPlan  !== undefined) updateData.dietPlanId  = dietPlan  ? parseInt(dietPlan)  : null;
 
-    await User.update(updateData, { where: { id: req.params.id } });
+    const target = await User.findOne({ where: { id: req.params.id, role: 'member' } });
+    if (!target) return res.status(404).json({ message: 'Member not found' });
+    await target.update(updateData);
     if (workoutPlan || dietPlan) {
       await Notification.create({
         recipientId: req.params.id,
@@ -82,7 +84,22 @@ const updateMember = async (req, res) => {
 
 const deleteMember = async (req, res) => {
   try {
-    await User.destroy({ where: { id: req.params.id } });
+    const member = await User.findOne({ where: { id: req.params.id, role: 'member' } });
+    if (!member) return res.status(404).json({ message: 'Member not found' });
+    const Waitlist  = require('../models/Waitlist');
+    const Rating    = require('../models/Rating');
+    const WeightLog = require('../models/WeightLog');
+    // Free up the slots this member was holding in upcoming sessions
+    const active = await Booking.findAll({ where: { memberId: member.id, status: 'confirmed' } });
+    for (const b of active) await Session.decrement('bookedSlots', { where: { id: b.sessionId } });
+    await Promise.all([
+      Booking.destroy({ where: { memberId: member.id } }),
+      Waitlist.destroy({ where: { memberId: member.id } }),
+      Rating.destroy({ where: { memberId: member.id } }),
+      WeightLog.destroy({ where: { userId: member.id } }),
+      Notification.destroy({ where: { recipientId: member.id } }),
+    ]);
+    await member.destroy();
     res.json({ message: 'Member deleted' });
   } catch (err) { handleError(res, err); }
 };
@@ -199,9 +216,13 @@ const getSessions = async (req, res) => {
   } catch (err) { handleError(res, err); }
 };
 
+const SESSION_FIELDS = ['title', 'description', 'trainer', 'sessionType', 'date', 'startTime', 'endTime', 'totalSlots', 'location', 'isActive'];
+const pickSessionFields = (body) =>
+  Object.fromEntries(SESSION_FIELDS.filter(k => body[k] !== undefined).map(k => [k, body[k]]));
+
 const createSession = async (req, res) => {
   try {
-    const session = await Session.create({ ...req.body, createdBy: req.user.id });
+    const session = await Session.create({ ...pickSessionFields(req.body), createdBy: req.user.id });
     const members = await User.findAll({ where: { role: 'member', isActive: true } });
     await Notification.bulkCreate(members.map(m => ({
       recipientId: m.id,
@@ -216,14 +237,23 @@ const createSession = async (req, res) => {
 
 const updateSession = async (req, res) => {
   try {
-    await Session.update(req.body, { where: { id: req.params.id } });
-    const session = await Session.findByPk(req.params.id);
-    res.json(session);
+    const existing = await Session.findByPk(req.params.id);
+    if (!existing) return res.status(404).json({ message: 'Session not found' });
+    const fields = pickSessionFields(req.body);
+    if (fields.totalSlots !== undefined && parseInt(fields.totalSlots) < existing.bookedSlots)
+      return res.status(400).json({ message: `Total slots cannot be lower than the ${existing.bookedSlots} spots already booked` });
+    await existing.update(fields);
+    res.json(existing);
   } catch (err) { handleError(res, err, 400); }
 };
 
 const deleteSession = async (req, res) => {
   try {
+    const Waitlist = require('../models/Waitlist');
+    const Rating   = require('../models/Rating');
+    const where = { sessionId: req.params.id };
+    await Promise.all([Booking.destroy({ where }), Waitlist.destroy({ where }), Rating.destroy({ where })]);
+    await Notification.update({ relatedSessionId: null }, { where: { relatedSessionId: req.params.id } });
     await Session.destroy({ where: { id: req.params.id } });
     res.json({ message: 'Session deleted' });
   } catch (err) { handleError(res, err); }
@@ -271,8 +301,8 @@ const getDashboardStats = async (req, res) => {
       limit: 5
     });
     const upcomingSessions = await Session.findAll({
-      where: { date: { [Op.gte]: new Date() } },
-      order: [['date', 'ASC']],
+      where: { date: { [Op.gte]: new Date().toISOString().split('T')[0] } },
+      order: [['date', 'ASC'], ['startTime', 'ASC']],
       limit: 5
     });
     res.json({ totalMembers, totalSessions, totalBookings, workoutPlans, dietPlans, recentBookings, upcomingSessions });

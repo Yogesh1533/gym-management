@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api';
 import { Search, BookOpen, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '../../utils/date';
 
 const statusColors = {
   confirmed: 'bg-emerald-500/10 text-emerald-400',
@@ -71,7 +72,7 @@ export default function AdminBookings() {
                   </td>
                   <td className="px-4 py-3 font-medium text-zinc-300">{b.session?.title}</td>
                   <td className="px-4 py-3 text-zinc-400">
-                    <p>{new Date(b.session?.date).toDateString()}</p>
+                    <p>{formatDate(b.session?.date)}</p>
                     <p className="text-xs">{b.session?.startTime}</p>
                   </td>
                   <td className="px-4 py-3">

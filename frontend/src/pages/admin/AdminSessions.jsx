@@ -3,6 +3,7 @@ import { adminAPI } from '../../services/api';
 import Modal from '../../components/shared/Modal';
 import { Plus, Edit, Trash2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '../../utils/date';
 
 const EMPTY_SESSION = {
   title: '', description: '', trainer: '', sessionType: 'general',
@@ -33,7 +34,7 @@ export default function AdminSessions() {
 
   const openCreate = () => { setForm(EMPTY_SESSION); setEditing(null); setModal(true); };
   const openEdit = (s) => {
-    setForm({ ...s, date: new Date(s.date).toISOString().split('T')[0] });
+    setForm({ ...s, date: String(s.date).slice(0, 10) });
     setEditing(s.id); setModal(true);
   };
 
@@ -92,7 +93,7 @@ export default function AdminSessions() {
             </div>
             <div className="text-sm text-zinc-500 space-y-1 mb-4">
               <p>👤 {s.trainer}</p>
-              <p>📅 {new Date(s.date).toDateString()}</p>
+              <p>📅 {formatDate(s.date)}</p>
               <p>🕐 {s.startTime} – {s.endTime}</p>
               <p>📍 {s.location}</p>
               <p>👥 {s.bookedSlots}/{s.totalSlots} booked</p>

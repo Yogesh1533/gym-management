@@ -11,7 +11,7 @@ Designed as a university capstone project demonstrating a production-ready web a
 |------------|-------------------------------------|
 | Frontend   | React.js + Tailwind CSS             |
 | Backend    | Node.js + Express.js                |
-| Database   | MySQL + Sequelize ORM               |
+| Database   | MySQL or SQLite + Sequelize ORM     |
 | Auth       | JWT + bcrypt                        |
 | HTTP       | Axios                               |
 | Toasts     | react-hot-toast                     |
@@ -28,7 +28,28 @@ Designed as a university capstone project demonstrating a production-ready web a
 
 ---
 
-## 🚀 How to Run
+## ☁️ Live on AWS (free tier)
+
+One command deploys the app to a single free-tier EC2 server, with HTTPS and a $0.01 billing alarm.
+See **[deploy/aws/README.md](deploy/aws/README.md)**.
+
+---
+
+## ⚡ Quick Start (no MySQL needed)
+
+```bash
+cd backend && npm install
+printf 'DB_DIALECT=sqlite\nJWT_SECRET=dev_secret\nAUTO_SEED=true\n' > .env
+npm start                       # API on http://localhost:5000, demo data seeded automatically
+
+cd ../frontend && npm install && npm start   # app on http://localhost:3000
+```
+
+For a production-style single server, run `npm run build` in `frontend/`. The backend then serves the built app itself at http://localhost:5000.
+
+---
+
+## 🚀 How to Run (MySQL)
 
 ### Prerequisites
 - Node.js v18+

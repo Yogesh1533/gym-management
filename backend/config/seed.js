@@ -14,14 +14,23 @@ const Session        = require('../models/Session');
 const MembershipPlan = require('../models/MembershipPlan');
 const { saveWorkoutPlan, saveDietPlan } = require('../utils/planHelper');
 
-const seed = async () => {
-  await connectDB();
-  const { sequelize } = require('./db');
-
+const resetTables = async () => {
+  const { sequelize, dialect } = require('./db');
+  if (dialect === 'sqlite') {
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+    await sequelize.sync({ force: true });
+    await sequelize.query('PRAGMA foreign_keys = ON');
+    return;
+  }
   await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
   for (const t of ['notifications','waitlists','ratings','bookings','weight_logs','sessions','users','workout_exercises','workout_days','workout_plans','diet_foods','diet_meals','diet_plans','membership_plans'])
     await sequelize.query(`TRUNCATE TABLE \`${t}\``);
   await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+};
+
+// Fills the database with demo data. Assumes connectDB() has already run.
+const seedDatabase = async () => {
+  await resetTables();
 
   // Membership Plans
   const [mpBasic, mpStandard, mpPremium, mpAnnual] = await MembershipPlan.bulkCreate([
@@ -198,7 +207,20 @@ const seed = async () => {
     console.log('Member3: mike@gym.com   / member123');
     console.log('─────────────────────────────────');
   }
-  process.exit();
 };
 
-seed().catch(err => { console.error(err); process.exit(1); });
+// Seeds only when the database has no users yet (used on first boot of a fresh server)
+const seedIfEmpty = async () => {
+  if (await User.count() > 0) return false;
+  await seedDatabase();
+  return true;
+};
+
+module.exports = { seedDatabase, seedIfEmpty };
+
+if (require.main === module) {
+  connectDB()
+    .then(seedDatabase)
+    .then(() => process.exit())
+    .catch(err => { console.error(err); process.exit(1); });
+}
