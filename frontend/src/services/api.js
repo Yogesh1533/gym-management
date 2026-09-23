@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api' });
+// Defaults to the same origin: in production Express serves the built app and the API
+// together, and in development the CRA "proxy" setting forwards /api to localhost:5000.
+const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || '/api' });
 
 // Attach JWT token to every request automatically
 api.interceptors.request.use((config) => {
@@ -13,10 +15,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    // A 401 from the login form itself just means wrong credentials — don't redirect
+    const isAuthCall = err.config?.url?.startsWith('/auth/login') || err.config?.url?.startsWith('/auth/register');
+    if (err.response?.status === 401 && !isAuthCall) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') window.location.href = '/login';
     }
     return Promise.reject(err);
   }
@@ -39,11 +43,17 @@ export const userAPI = {
   generateCustomPlan: (selectedFoodIds) => api.post('/users/generate-custom-plan', { selectedFoodIds }),
   logWeight: (weight, note) => api.post('/users/weight-log', { weight, note }),
   getWeightLogs: () => api.get('/users/weight-log'),
+  getAchievements: () => api.get('/users/achievements'),
 };
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
+  getAnalytics: () => api.get('/admin/analytics'),
+  // Leads
+  getLeads: () => api.get('/admin/leads'),
+  updateLead: (id, status) => api.put(`/admin/leads/${id}`, { status }),
+  deleteLead: (id) => api.delete(`/admin/leads/${id}`),
   // Members
   getMembers: () => api.get('/admin/members'),
   getMember: (id) => api.get(`/admin/members/${id}`),
@@ -74,6 +84,11 @@ export const adminAPI = {
 // ─── Sessions (member view) ───────────────────────────────────────────────────
 export const sessionAPI = {
   getUpcoming: () => api.get('/sessions'),
+  getPublic: () => api.get('/sessions/public'),
+};
+
+export const leadAPI = {
+  create: (data) => api.post('/leads', data),
 };
 
 // ─── Bookings ────────────────────────────────────────────────────────────────
@@ -102,6 +117,9 @@ export const notificationAPI = {
 export const membershipAPI = {
   getPublicPlans: () => api.get('/memberships/public'),
   getMyMembership: () => api.get('/memberships/my'),
+  subscribe: (planId) => api.post('/memberships/subscribe', { planId }),
+  cancel: () => api.post('/memberships/cancel'),
+  getPayments: () => api.get('/memberships/payments'),
   getAllPlans: () => api.get('/memberships'),
   createPlan: (data) => api.post('/memberships', data),
   updatePlan: (id, data) => api.put(`/memberships/${id}`, data),

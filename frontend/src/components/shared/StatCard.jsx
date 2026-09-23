@@ -1,23 +1,26 @@
-export default function StatCard({ title, value, icon: Icon, color = 'cyan', subtitle }) {
-  const colors = {
-    cyan: 'bg-cyan-500/10 text-cyan-400',
-    blue: 'bg-blue-500/10 text-blue-400',
-    green: 'bg-emerald-500/10 text-emerald-400',
-    purple: 'bg-purple-500/10 text-purple-400',
-    red: 'bg-red-500/10 text-red-400',
-    orange: 'bg-orange-500/10 text-orange-400',
-  };
+const tones = {
+  brand:  'text-brand-300 bg-brand-400/10 ring-brand-400/20',
+  cyan:   'text-brand-300 bg-brand-400/10 ring-brand-400/20',
+  blue:   'text-sky-300 bg-sky-400/10 ring-sky-400/20',
+  green:  'text-emerald-300 bg-emerald-400/10 ring-emerald-400/20',
+  purple: 'text-violet-300 bg-violet-400/10 ring-violet-400/20',
+  red:    'text-rose-300 bg-rose-400/10 ring-rose-400/20',
+  orange: 'text-amber-300 bg-amber-400/10 ring-amber-400/20',
+};
 
+export default function StatCard({ title, value, icon: Icon, color = 'brand', subtitle }) {
   return (
-    <div className="card flex items-center gap-4">
-      <div className={`p-3 rounded-xl ${colors[color]}`}>
-        <Icon size={24} />
+    <div className="card p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{title}</p>
+        {Icon && (
+          <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ring-1 ${tones[color] || tones.brand}`}>
+            <Icon size={16} />
+          </span>
+        )}
       </div>
-      <div>
-        <p className="text-sm text-zinc-500">{title}</p>
-        <p className="text-2xl font-bold text-white">{value}</p>
-        {subtitle && <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>}
-      </div>
+      <p className="mt-3 font-display text-2xl font-semibold text-white tabular-nums">{value}</p>
+      {subtitle && <p className="mt-1 text-xs text-zinc-500">{subtitle}</p>}
     </div>
   );
 }

@@ -21,6 +21,7 @@ const User = sequelize.define('User', {
   workoutPlanId: { type: DataTypes.INTEGER, allowNull: true },
   dietPlanId: { type: DataTypes.INTEGER, allowNull: true },
   membershipPlanId: { type: DataTypes.INTEGER, allowNull: true },
+  membershipRenewsAt: { type: DataTypes.DATEONLY, allowNull: true },
 }, { tableName: 'users' });
 
 User.beforeSave(async (user) => {

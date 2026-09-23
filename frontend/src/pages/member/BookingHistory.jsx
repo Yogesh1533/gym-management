@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { bookingAPI, ratingAPI } from '../../services/api';
 import { Calendar, Clock, MapPin, User, X, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '../../utils/date';
 
 const statusColors = {
   confirmed: 'bg-emerald-500/10 text-emerald-400',
@@ -109,20 +110,20 @@ export default function BookingHistory() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" />
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" />
     </div>
   );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-2">Booking History</h1>
+      <h1 className="page-title mb-2">Booking History</h1>
       <p className="text-zinc-500 mb-8">All your training session bookings.</p>
 
       {bookings.length === 0 ? (
         <div className="card text-center py-16 text-zinc-600">
           <Calendar size={48} className="mx-auto mb-3 opacity-30" />
           <p className="text-lg">No bookings yet.</p>
-          <a href="/sessions" className="text-cyan-400 hover:underline text-sm mt-2 block">Browse sessions →</a>
+          <a href="/sessions" className="text-brand-400 hover:underline text-sm mt-2 block">Browse sessions →</a>
         </div>
       ) : (
         <div className="space-y-4">
@@ -134,10 +135,10 @@ export default function BookingHistory() {
                   <span className={`badge ${statusColors[b.status]} capitalize`}>{b.status}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-zinc-500">
-                  <span className="flex items-center gap-1"><User size={13} className="text-cyan-400" />{b.session?.trainer}</span>
-                  <span className="flex items-center gap-1"><Calendar size={13} className="text-cyan-400" />{new Date(b.session?.date).toDateString()}</span>
-                  <span className="flex items-center gap-1"><Clock size={13} className="text-cyan-400" />{b.session?.startTime} – {b.session?.endTime}</span>
-                  <span className="flex items-center gap-1"><MapPin size={13} className="text-cyan-400" />{b.session?.location}</span>
+                  <span className="flex items-center gap-1"><User size={13} className="text-brand-400" />{b.session?.trainer}</span>
+                  <span className="flex items-center gap-1"><Calendar size={13} className="text-brand-400" />{formatDate(b.session?.date)}</span>
+                  <span className="flex items-center gap-1"><Clock size={13} className="text-brand-400" />{b.session?.startTime} – {b.session?.endTime}</span>
+                  <span className="flex items-center gap-1"><MapPin size={13} className="text-brand-400" />{b.session?.location}</span>
                 </div>
                 <p className="text-xs text-zinc-600 mt-2">Booked on {new Date(b.createdAt).toLocaleDateString()}</p>
                 {b.status !== 'cancelled' && (

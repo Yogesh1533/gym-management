@@ -18,7 +18,7 @@ export default function MembershipCard() {
   const { plan, sessionsUsed, sessionsRemaining } = data;
 
   if (!plan) return (
-    <div className="card border border-dashed border-zinc-700 text-center py-8">
+    <div className="card border border-dashed border-white/10 text-center py-8">
       <CreditCard size={32} className="mx-auto mb-3 text-zinc-600" />
       <p className="text-zinc-500 text-sm mb-3">No membership plan assigned yet.</p>
       <Link to="/pricing" className="btn-primary text-sm px-4 py-2">View Plans</Link>
@@ -50,7 +50,7 @@ export default function MembershipCard() {
             <span>Sessions this month</span>
             <span>{sessionsUsed} / {plan.sessionLimit}</span>
           </div>
-          <div className="w-full bg-zinc-800 rounded-full h-2">
+          <div className="w-full bg-white/[0.04] rounded-full h-2">
             <div
               className="h-2 rounded-full transition-all"
               style={{ width: `${usagePercent}%`, backgroundColor: usagePercent >= 100 ? '#ef4444' : plan.color }}

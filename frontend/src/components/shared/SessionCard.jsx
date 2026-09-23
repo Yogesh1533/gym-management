@@ -1,4 +1,5 @@
 import { Calendar, Clock, MapPin, User, Users } from 'lucide-react';
+import { formatDate } from '../../utils/date';
 
 const typeColors = {
   hiit: 'bg-red-500/10 text-red-400',
@@ -7,7 +8,7 @@ const typeColors = {
   cardio: 'bg-emerald-500/10 text-emerald-400',
   pilates: 'bg-pink-500/10 text-pink-400',
   crossfit: 'bg-orange-500/10 text-orange-400',
-  general: 'bg-zinc-700 text-zinc-300',
+  general: 'bg-white/10 text-zinc-300',
 };
 
 export default function SessionCard({ session, onBook, booked, waitlisted, loading }) {
@@ -27,23 +28,23 @@ export default function SessionCard({ session, onBook, booked, waitlisted, loadi
 
       <div className="space-y-2 text-sm text-zinc-400 mb-4">
         <div className="flex items-center gap-2">
-          <User size={14} className="text-cyan-400" />
+          <User size={14} className="text-brand-400" />
           <span>{session.trainer}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Calendar size={14} className="text-cyan-400" />
-          <span>{new Date(session.date).toDateString()}</span>
+          <Calendar size={14} className="text-brand-400" />
+          <span>{formatDate(session.date)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Clock size={14} className="text-cyan-400" />
+          <Clock size={14} className="text-brand-400" />
           <span>{session.startTime} – {session.endTime}</span>
         </div>
         <div className="flex items-center gap-2">
-          <MapPin size={14} className="text-cyan-400" />
+          <MapPin size={14} className="text-brand-400" />
           <span>{session.location}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Users size={14} className="text-cyan-400" />
+          <Users size={14} className="text-brand-400" />
           <span className={isFull ? 'text-red-400 font-medium' : 'text-emerald-400 font-medium'}>
             {isFull ? 'Fully Booked' : `${available} spots left`}
           </span>

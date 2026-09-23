@@ -8,6 +8,7 @@ import {
 } from 'chart.js';
 import { TrendingDown, TrendingUp, Minus, Scale } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Achievements from '../../components/member/Achievements';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -62,9 +63,9 @@ export default function Progress() {
     datasets: [{
       label: 'Weight (kg)',
       data: logs.map(l => l.weight),
-      borderColor: '#06b6d4',
-      backgroundColor: 'rgba(6,182,212,0.08)',
-      pointBackgroundColor: '#06b6d4',
+      borderColor: '#d9b465',
+      backgroundColor: 'rgba(217,180,101,0.08)',
+      pointBackgroundColor: '#d9b465',
       pointRadius: 5,
       tension: 0.4,
       fill: true,
@@ -91,13 +92,13 @@ export default function Progress() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" />
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" />
     </div>
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-2">Progress Tracker</h1>
+    <div className="max-w-5xl mx-auto px-4 py-10">
+      <h1 className="page-title mb-2">Progress Tracker</h1>
       <p className="text-zinc-500 mb-8">Log your weight and track your fitness journey over time.</p>
 
       {/* Stats Row */}
@@ -128,7 +129,7 @@ export default function Progress() {
 
       {/* Chart */}
       <div className="card mb-8">
-        <h2 className="font-bold text-white mb-4 flex items-center gap-2"><Scale size={18} className="text-cyan-400" /> Weight History</h2>
+        <h2 className="font-bold text-white mb-4 flex items-center gap-2"><Scale size={18} className="text-brand-400" /> Weight History</h2>
         {logs.length < 2 ? (
           <p className="text-zinc-500 text-sm text-center py-8">Log at least 2 entries to see your chart.</p>
         ) : (
@@ -155,13 +156,15 @@ export default function Progress() {
         </form>
       </div>
 
+      <div className="mb-8"><Achievements /></div>
+
       {/* Log History */}
       {logs.length > 0 && (
         <div className="card">
           <h2 className="font-bold text-white mb-4">Log History</h2>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {[...logs].reverse().map((log, i) => (
-              <div key={log.id} className="flex items-center justify-between bg-zinc-800 rounded-lg px-4 py-2 text-sm">
+              <div key={log.id} className="flex items-center justify-between bg-white/[0.04] rounded-lg px-4 py-2 text-sm">
                 <span className="text-zinc-400">{new Date(log.createdAt).toLocaleDateString()}</span>
                 <span className="text-white font-semibold">{log.weight} kg</span>
                 <span className="text-zinc-500 text-xs">{log.note || '—'}</span>

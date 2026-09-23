@@ -1,16 +1,23 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { connectDB } = require('./config/db');
+const { connectDB, sequelize } = require('./config/db');
 
 require('./config/associations');
 
 const app = express();
 
-// Trust Railway/Render/Heroku proxy
+// Trust the reverse proxy in front of the app (Nginx/Caddy on AWS, Railway, Render...)
 app.set('trust proxy', 1);
+
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not set. Copy .env.example to .env and set it.');
+  process.exit(1);
+}
 
 // ─── Security Headers ────────────────────────────────────────────────────────
 app.use(helmet({
@@ -18,11 +25,16 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc:  ["'self'"],
-      styleSrc:   ["'self'", "'unsafe-inline'"],
+      styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc:     ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'", "https://pyfitness.netlify.app"],
+      // Allow plain-HTTP hosting (e.g. an EC2 IP without a certificate)
+      upgradeInsecureRequests: null,
     },
   },
+  // Only send HSTS when the site is actually served over HTTPS
+  hsts: process.env.ENABLE_HSTS === 'true',
   crossOriginEmbedderPolicy: false,
 }));
 
@@ -55,7 +67,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use(globalLimiter);
+app.use('/api', globalLimiter);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -64,25 +76,26 @@ const allowedOrigins = [
   ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : [])
 ];
 
-// Handle OPTIONS preflight explicitly
-app.options('*', cors());
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error('Not allowed by CORS'));
-  },
+const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+// Same-origin requests (frontend served by this server) are always allowed;
+// cross-origin requests only from the allow-list above.
+const corsDelegate = (req, callback) => {
+  const origin = req.header('Origin');
+  let sameOrigin = false;
+  try { sameOrigin = !!origin && new URL(origin).host === req.get('host'); } catch { /* malformed origin */ }
+  const allowed = !origin || sameOrigin || allowedOrigins.includes(origin);
+  callback(null, { ...corsOptions, origin: allowed });
+};
+
+app.use(cors(corsDelegate));
 
 // ─── Body Parser ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10kb' }));
-
-// ─── Connect DB ──────────────────────────────────────────────────────────────
-connectDB();
+app.use(express.json({ limit: '100kb' }));
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use('/api/auth',          authLimiter, require('./routes/auth'));
@@ -93,8 +106,32 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/sessions',      require('./routes/sessions'));
 app.use('/api/ratings',       require('./routes/ratings'));
 app.use('/api/memberships',   require('./routes/memberships'));
+app.use('/api/leads',         require('./routes/leads'));
 
-app.get('/', (req, res) => res.json({ message: 'Gym Management API is running' }));
+app.get('/api/health', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({ status: 'ok' });
+  } catch {
+    res.status(503).json({ status: 'error' });
+  }
+});
+
+// ─── Frontend (single-server deployments) ────────────────────────────────────
+// When the React build is present, serve it from the same origin as the API so
+// no CORS or separate static hosting is needed.
+const clientBuild = process.env.CLIENT_BUILD_DIR || path.join(__dirname, '..', 'frontend', 'build');
+const serveClient = fs.existsSync(path.join(clientBuild, 'index.html'));
+
+if (serveClient) {
+  app.use(express.static(clientBuild, { index: false, maxAge: '7d' }));
+  app.get(/^\/(?!api\/).*/, (req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(path.join(clientBuild, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => res.json({ message: 'Gym Management API is running' }));
+}
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
@@ -109,7 +146,25 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  if (process.env.NODE_ENV !== 'production')
-    console.log(`Server running on port ${PORT}`);
-});
+
+const start = async () => {
+  await connectDB();
+  if (process.env.AUTO_SEED === 'true') {
+    const { seedIfEmpty } = require('./config/seed');
+    if (await seedIfEmpty()) console.log('Empty database seeded with demo data');
+  }
+  // Public demos show the admin login on the sign-in page, so optionally restore
+  // the demo data on a timer (this also keeps the seeded session dates upcoming).
+  const resetHours = parseFloat(process.env.DEMO_RESET_HOURS);
+  if (resetHours > 0) {
+    const { seedDatabase } = require('./config/seed');
+    setInterval(() => {
+      seedDatabase()
+        .then(() => console.log('Demo data reset'))
+        .catch(err => console.error('Demo reset failed:', err.message));
+    }, resetHours * 60 * 60 * 1000);
+  }
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+};
+
+start();
