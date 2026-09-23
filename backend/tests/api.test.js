@@ -269,18 +269,18 @@ const runTests = async () => {
   assert('Dashboard has totalMembers', typeof res.body.totalMembers === 'number');
   assert('Dashboard has totalSessions', typeof res.body.totalSessions === 'number');
   assert('Dashboard has totalBookings', typeof res.body.totalBookings === 'number');
-  assert('Dashboard member count is 3', res.body.totalMembers === 3);
+  assert('Dashboard member count is 8', res.body.totalMembers === 8);
 
   // Test 32: Get all members
   res = await request('GET', '/api/admin/members', null, adminToken);
   assert('Admin GET members succeeds', res.status === 200);
-  assert('Returns 3 members', res.body.length === 3);
+  assert('Returns 8 members', res.body.length === 8);
   assert('Members do not expose passwords', !res.body[0].password);
 
   // Test 33: Get all sessions (admin)
   res = await request('GET', '/api/admin/sessions', null, adminToken);
   assert('Admin GET sessions succeeds', res.status === 200);
-  assert('Returns 5 sessions', res.body.length === 5);
+  assert('Returns 18 sessions (9 past, 9 upcoming)', res.body.length === 18);
 
   // Test 34: Get all bookings (admin)
   res = await request('GET', '/api/admin/bookings', null, adminToken);
@@ -329,7 +329,7 @@ const runTests = async () => {
     type: 'general'
   }, adminToken);
   assert('Admin send notification succeeds', res.status === 200);
-  assert('Notification sent to all members', res.body.message.includes('3 members'));
+  assert('Notification sent to all members', res.body.message.includes('8 members'));
 
   // Test 41: Send notification without title
   res = await request('POST', '/api/admin/notifications/send', {
@@ -359,6 +359,45 @@ const runTests = async () => {
   assert('Generate plan succeeds for member with stats', res.status === 200);
   assert('Generated plan has BMI', !!res.body.bmi);
   assert('Generated plan has bmiCategory', !!res.body.bmiCategory);
+
+  // ── PREMIUM FEATURE TESTS ───────────────────────────────────────────────────
+  console.log('\n📋 PREMIUM FEATURE TESTS');
+
+  res = await request('GET', '/api/sessions/public');
+  assert('Public schedule works without login', res.status === 200 && Array.isArray(res.body) && res.body.length > 0);
+  assert('Public schedule hides internal fields', res.body[0] && res.body[0].createdBy === undefined);
+
+  res = await request('POST', '/api/leads', { name: 'Trial Visitor', email: 'visitor@example.com', goal: 'weight_loss' });
+  assert('Free-trial request is accepted', res.status === 201);
+  res = await request('POST', '/api/leads', { name: '', email: 'bad' });
+  assert('Invalid free-trial request is rejected', res.status === 400);
+  res = await request('GET', '/api/admin/leads', null, adminToken);
+  assert('Admin sees leads', res.status === 200 && res.body.some(l => l.email === 'visitor@example.com'));
+  const leadId = res.body[0]?.id;
+  res = await request('PUT', `/api/admin/leads/${leadId}`, { status: 'contacted' }, adminToken);
+  assert('Admin updates lead status', res.status === 200 && res.body.status === 'contacted');
+  res = await request('GET', '/api/admin/leads', null, memberToken);
+  assert('Member cannot read leads', res.status === 403);
+
+  res = await request('GET', '/api/admin/analytics', null, adminToken);
+  assert('Analytics returns 6 months of revenue', res.status === 200 && res.body.revenueByMonth?.length === 6);
+  assert('Analytics has class popularity', Array.isArray(res.body.classPopularity) && res.body.classPopularity.length > 0);
+  assert('Analytics revenue is positive', res.body.revenueTotal > 0);
+
+  const plans = (await request('GET', '/api/memberships/public')).body;
+  const annual = plans.find(p => p.tier === 'annual');
+  res = await request('POST', '/api/memberships/subscribe', { planId: annual.id }, memberToken);
+  assert('Checkout activates a plan', res.status === 201 && !!res.body.payment?.reference);
+  res = await request('POST', '/api/memberships/subscribe', { planId: annual.id }, memberToken);
+  assert('Cannot buy the plan you already have', res.status === 400);
+  res = await request('GET', '/api/memberships/my', null, memberToken);
+  assert('Membership shows new plan and renewal date', res.body.plan?.id === annual.id && !!res.body.renewsAt);
+  res = await request('GET', '/api/memberships/payments', null, memberToken);
+  assert('Billing history includes the new payment', res.status === 200 && res.body[0]?.membershipPlanId === annual.id);
+
+  res = await request('GET', '/api/users/achievements', null, memberToken);
+  assert('Achievements are returned', res.status === 200 && res.body.total === res.body.achievements?.length);
+  assert('Elite badge earned after upgrading', res.body.achievements?.find(a => a.id === 'elite')?.earned === true);
 
   // Registration form sends blank optional fields as empty strings
   res = await request('POST', '/api/auth/register', {

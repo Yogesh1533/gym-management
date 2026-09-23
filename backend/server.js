@@ -106,6 +106,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/sessions',      require('./routes/sessions'));
 app.use('/api/ratings',       require('./routes/ratings'));
 app.use('/api/memberships',   require('./routes/memberships'));
+app.use('/api/leads',         require('./routes/leads'));
 
 app.get('/api/health', async (req, res) => {
   try {

@@ -228,7 +228,7 @@ export default function AdminDietPlans() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" />
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" />
     </div>
   );
 
@@ -236,7 +236,7 @@ export default function AdminDietPlans() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Diet Plans</h1>
+          <h1 className="page-title">Diet Plans</h1>
           <p className="text-zinc-500 mt-1">{plans.length} plans available</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
@@ -254,7 +254,7 @@ export default function AdminDietPlans() {
                   <h3 className="font-bold text-white text-lg">{p.title}</h3>
                   <span className={`badge ${goalColors[p.goal]} capitalize text-xs`}>{p.goal?.replace(/_/g, ' ')}</span>
                   <span className="badge bg-emerald-500/10 text-emerald-400 text-xs">{p.dailyCalories} kcal/day</span>
-                  <span className="badge bg-zinc-700 text-zinc-300 text-xs">{p.meals?.length || 0} meals</span>
+                  <span className="badge bg-white/10 text-zinc-300 text-xs">{p.meals?.length || 0} meals</span>
                 </div>
                 <p className="text-sm text-zinc-500 mt-1">{p.description}</p>
                 {/* Macro summary */}
@@ -294,9 +294,9 @@ export default function AdminDietPlans() {
 
             {/* Expanded Meals */}
             {expandedPlan === p.id && p.meals?.length > 0 && (
-              <div className="mt-4 space-y-3 border-t border-zinc-800 pt-4">
+              <div className="mt-4 space-y-3 border-t border-white/[0.07] pt-4">
                 {p.meals.map((meal, mi) => (
-                  <div key={mi} className="bg-zinc-800 rounded-xl overflow-hidden">
+                  <div key={mi} className="bg-white/[0.04] rounded-xl overflow-hidden">
                     <button
                       onClick={() => setExpandedMeal(expandedMeal === `${p.id}-${mi}` ? null : `${p.id}-${mi}`)}
                       className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -309,7 +309,7 @@ export default function AdminDietPlans() {
                       {expandedMeal === `${p.id}-${mi}` ? <ChevronUp size={14} className="text-zinc-400" /> : <ChevronDown size={14} className="text-zinc-400" />}
                     </button>
                     {expandedMeal === `${p.id}-${mi}` && (
-                      <div className="px-4 pb-3 border-t border-zinc-700">
+                      <div className="px-4 pb-3 border-t border-white/10">
                         <div className="grid grid-cols-6 gap-2 text-xs text-zinc-500 py-2 font-medium">
                           <span className="col-span-2">Food</span>
                           <span>Qty</span>
@@ -318,7 +318,7 @@ export default function AdminDietPlans() {
                           <span className="text-yellow-400">C(g)</span>
                         </div>
                         {meal.foods?.map((food, fi) => (
-                          <div key={fi} className="grid grid-cols-6 gap-2 text-xs py-1.5 border-b border-zinc-700 last:border-0">
+                          <div key={fi} className="grid grid-cols-6 gap-2 text-xs py-1.5 border-b border-white/10 last:border-0">
                             <span className="col-span-2 text-white">{food.name}</span>
                             <span className="text-zinc-400">{food.quantity}</span>
                             <span className="text-zinc-300">{food.calories}</span>
@@ -333,7 +333,7 @@ export default function AdminDietPlans() {
                 {p.restrictions?.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-2">
                     {p.restrictions.map((r, i) => (
-                      <span key={i} className="text-xs bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-1 rounded-full">⚠️ {r}</span>
+                      <span key={i} className="text-xs bg-white/[0.04] text-zinc-400 border border-white/10 px-2 py-1 rounded-full">⚠️ {r}</span>
                     ))}
                   </div>
                 )}
@@ -373,7 +373,7 @@ export default function AdminDietPlans() {
             </div>
             <div>
               <label className="label">Daily Calories (auto-calculated)</label>
-              <input type="number" className="input bg-zinc-800 text-zinc-400 cursor-not-allowed" value={form.dailyCalories} readOnly />
+              <input type="number" className="input bg-white/[0.04] text-zinc-400 cursor-not-allowed" value={form.dailyCalories} readOnly />
             </div>
           </div>
 
@@ -381,15 +381,15 @@ export default function AdminDietPlans() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="label mb-0">Meals & Foods</label>
-              <button type="button" onClick={addMeal} className="text-xs text-cyan-400 hover:underline">+ Add Meal</button>
+              <button type="button" onClick={addMeal} className="text-xs text-brand-400 hover:underline">+ Add Meal</button>
             </div>
             <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
               {form.meals?.map((meal, mi) => (
-                <div key={mi} className="bg-zinc-800 rounded-xl overflow-hidden">
+                <div key={mi} className="bg-white/[0.04] rounded-xl overflow-hidden">
                   {/* Meal Header */}
-                  <div className="flex items-center gap-3 px-4 py-2 border-b border-zinc-700">
+                  <div className="flex items-center gap-3 px-4 py-2 border-b border-white/10">
                     <input
-                      className="input text-sm py-1 w-40 bg-zinc-700"
+                      className="input text-sm py-1 w-40 bg-white/10"
                       value={meal.mealType}
                       onChange={e => updateMealType(mi, e.target.value)}
                       placeholder="Meal name"
@@ -429,7 +429,7 @@ export default function AdminDietPlans() {
                           className="col-span-2 text-red-400 hover:text-red-300 text-xs text-center">✕</button>
                       </div>
                     ))}
-                    <button type="button" onClick={() => addFood(mi)} className="text-xs text-cyan-400 hover:underline mt-1">
+                    <button type="button" onClick={() => addFood(mi)} className="text-xs text-brand-400 hover:underline mt-1">
                       + Add Food
                     </button>
                   </div>

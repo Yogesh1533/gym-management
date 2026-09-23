@@ -89,6 +89,7 @@ const deleteMember = async (req, res) => {
     const Waitlist  = require('../models/Waitlist');
     const Rating    = require('../models/Rating');
     const WeightLog = require('../models/WeightLog');
+    const Payment   = require('../models/Payment');
     // Free up the slots this member was holding in upcoming sessions
     const active = await Booking.findAll({ where: { memberId: member.id, status: 'confirmed' } });
     for (const b of active) await Session.decrement('bookedSlots', { where: { id: b.sessionId } });
@@ -98,6 +99,7 @@ const deleteMember = async (req, res) => {
       Rating.destroy({ where: { memberId: member.id } }),
       WeightLog.destroy({ where: { userId: member.id } }),
       Notification.destroy({ where: { recipientId: member.id } }),
+      Payment.destroy({ where: { userId: member.id } }),
     ]);
     await member.destroy();
     res.json({ message: 'Member deleted' });
@@ -309,6 +311,86 @@ const getDashboardStats = async (req, res) => {
   } catch (err) { handleError(res, err); }
 };
 
+// ─── ANALYTICS ──────────────────────────────────────────────────────────────
+// Aggregated in JS so it works the same on MySQL and SQLite (data volumes are small).
+
+const monthKey = (d) => new Date(d).toISOString().slice(0, 7);
+
+const getAnalytics = async (req, res) => {
+  try {
+    const Payment = require('../models/Payment');
+    const Lead    = require('../models/Lead');
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    const [payments, bookings, members, plans, newLeads] = await Promise.all([
+      Payment.findAll({ where: { status: 'paid' }, attributes: ['amount', 'createdAt'] }),
+      Booking.findAll({
+        attributes: ['status', 'createdAt'],
+        include: [{ model: Session, as: 'session', attributes: ['sessionType', 'date'] }]
+      }),
+      User.findAll({ where: { role: 'member' }, attributes: ['membershipPlanId', 'createdAt', 'isActive'] }),
+      MembershipPlan.findAll({ attributes: ['id', 'name', 'color'] }),
+      Lead.count({ where: { status: 'new' } }),
+    ]);
+
+    // Revenue for the last 6 months
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 15);
+      months.push(monthKey(d));
+    }
+    const revenueByMonth = months.map(m => ({
+      month: m,
+      total: payments.filter(p => monthKey(p.createdAt) === m).reduce((sum, p) => sum + p.amount, 0)
+    }));
+
+    // Bookings made per day over the last 14 days
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+    const activeBookings = bookings.filter(b => b.status !== 'cancelled');
+    const bookingsByDay = days.map(day => ({
+      day,
+      count: activeBookings.filter(b => new Date(b.createdAt).toISOString().split('T')[0] === day).length
+    }));
+
+    // Most popular class types
+    const typeCounts = {};
+    activeBookings.forEach(b => {
+      const t = b.session?.sessionType || 'general';
+      typeCounts[t] = (typeCounts[t] || 0) + 1;
+    });
+    const classPopularity = Object.entries(typeCounts)
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Members per membership plan
+    const membersByPlan = [...plans.map(p => ({
+      name: p.name, color: p.color,
+      count: members.filter(m => m.membershipPlanId === p.id).length
+    })), { name: 'No plan', color: '#52525b', count: members.filter(m => !m.membershipPlanId).length }]
+      .filter(p => p.count > 0);
+
+    // Attendance rate for sessions that have already happened
+    const past = bookings.filter(b => b.session && b.session.date < today && b.status !== 'cancelled');
+    const attended = past.filter(b => b.status === 'attended').length;
+
+    const thisMonth = monthKey(now);
+    res.json({
+      revenueThisMonth: revenueByMonth[revenueByMonth.length - 1].total,
+      revenueTotal: payments.reduce((sum, p) => sum + p.amount, 0),
+      activeMembers: members.filter(m => m.isActive).length,
+      newMembersThisMonth: members.filter(m => monthKey(m.createdAt) === thisMonth).length,
+      attendanceRate: past.length ? Math.round((attended / past.length) * 100) : null,
+      newLeads,
+      revenueByMonth, bookingsByDay, classPopularity, membersByPlan,
+    });
+  } catch (err) { handleError(res, err); }
+};
+
 // ─── SEND NOTIFICATION ──────────────────────────────────────────────────────
 
 const sendNotification = async (req, res) => {
@@ -331,5 +413,5 @@ module.exports = {
   getWorkoutPlans, createWorkoutPlan, updateWorkoutPlan, deleteWorkoutPlan,
   getDietPlans, createDietPlan, updateDietPlan, deleteDietPlan,
   getSessions, createSession, updateSession, deleteSession,
-  getAllBookings, getDashboardStats, sendNotification, markAttended
+  getAllBookings, getDashboardStats, sendNotification, markAttended, getAnalytics
 };

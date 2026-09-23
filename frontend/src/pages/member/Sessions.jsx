@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { sessionAPI, bookingAPI } from '../../services/api';
 import SessionCard from '../../components/shared/SessionCard';
 import toast from 'react-hot-toast';
-import { Search } from 'lucide-react';
+import { Search, LayoutGrid, CalendarDays } from 'lucide-react';
+import WeekView from '../../components/member/WeekView';
+import PageLoader from '../../components/shared/PageLoader';
 
 const SESSION_TYPES = ['all', 'hiit', 'yoga', 'strength', 'cardio', 'pilates', 'crossfit', 'general'];
 
@@ -14,6 +16,7 @@ export default function Sessions() {
   const [bookingId, setBookingId] = useState(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [view, setView] = useState('grid');
 
   useEffect(() => {
     Promise.all([sessionAPI.getUpcoming(), bookingAPI.getMyBookings(), bookingAPI.getMyWaitlist()])
@@ -53,17 +56,25 @@ export default function Sessions() {
     return matchType && matchSearch;
   });
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" />
-    </div>
-  );
+  if (loading) return <PageLoader />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Training Sessions</h1>
-        <p className="text-zinc-500 mt-1">Book your spot in upcoming group training sessions.</p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="page-title">Classes</h1>
+            <p className="text-zinc-500 mt-1">Reserve your spot. Full classes have a waitlist that books you automatically.</p>
+          </div>
+          <div className="inline-flex rounded-xl border hairline bg-white/[0.02] p-1 self-start" role="tablist" aria-label="View">
+            {[['grid', 'Cards', LayoutGrid], ['week', 'Week', CalendarDays]].map(([key, label, Icon]) => (
+              <button key={key} onClick={() => setView(key)} role="tab" aria-selected={view === key}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${view === key ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white'}`}>
+                <Icon size={15} />{label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -80,7 +91,7 @@ export default function Sessions() {
               key={t}
               onClick={() => setFilter(t)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                filter === t ? 'bg-cyan-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                filter === t ? 'bg-brand-400 text-ink-950' : 'bg-white/[0.04] text-zinc-400 hover:bg-white/10 hover:text-white'
               }`}
             >
               {t}
@@ -89,7 +100,9 @@ export default function Sessions() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {view === 'week' ? (
+        <WeekView sessions={filtered} myBookings={myBookings} myWaitlist={myWaitlist} onBook={handleBook} bookingId={bookingId} />
+      ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-zinc-600">
           <p className="text-lg">No sessions found.</p>
           <p className="text-sm mt-1">Try a different filter or check back later.</p>

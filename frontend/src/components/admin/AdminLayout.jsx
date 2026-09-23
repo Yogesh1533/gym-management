@@ -3,11 +3,13 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Calendar, Dumbbell, Apple,
-  BookOpen, Bell, LogOut, Menu, Dumbbell as GymIcon, CreditCard
+  BookOpen, Bell, LogOut, Menu, CreditCard, Inbox, ExternalLink
 } from 'lucide-react';
+import Logo from '../shared/Logo';
 
 const navItems = [
   { to: '/admin/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/leads',        icon: Inbox,           label: 'Trial leads' },
   { to: '/admin/members',      icon: Users,           label: 'Members' },
   { to: '/admin/sessions',     icon: Calendar,        label: 'Sessions' },
   { to: '/admin/workout-plans',icon: Dumbbell,        label: 'Workout Plans' },
@@ -26,12 +28,8 @@ export default function AdminLayout() {
 
   const Sidebar = () => (
     <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-zinc-800">
-        <div className="flex items-center gap-2 text-white font-bold text-xl">
-          <GymIcon className="text-cyan-400" size={24} />
-          PY <span className="text-cyan-400">Fitness</span>
-          <span className="text-xs bg-cyan-500 text-black font-semibold px-2 py-0.5 rounded-full ml-1">Admin</span>
-        </div>
+      <div className="px-5 h-16 flex items-center border-b hairline">
+        <Logo to="/admin/dashboard" suffix="Admin" />
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -42,20 +40,22 @@ export default function AdminLayout() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-cyan-500 text-black'
-                  : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                  ? 'bg-brand-500 text-black'
+                  : 'text-zinc-400 hover:bg-white/5 hover:text-white'
               }`
             }
           >
-            <Icon size={18} />
-            {label}
+            {({ isActive }) => (<><Icon size={17} className={isActive ? 'text-brand-300' : ''} />{label}</>)}
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-zinc-800">
+      <div className="p-4 border-t hairline">
+        <a href="/" target="_blank" rel="noreferrer" className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-zinc-500 hover:text-white hover:bg-white/[0.03]">
+          <ExternalLink size={14} /> View public site
+        </a>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 bg-cyan-500 text-black rounded-full flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-300 to-brand-600 text-ink-950 flex items-center justify-center font-bold text-sm">
             {user?.name?.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
@@ -71,29 +71,29 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden">
-      <aside className="hidden lg:flex flex-col w-64 bg-zinc-900 border-r border-zinc-800 flex-shrink-0">
+    <div className="flex h-screen bg-ink-950 overflow-hidden">
+      <aside className="hidden lg:flex flex-col w-64 bg-ink-900/60 border-r hairline flex-shrink-0">
         <Sidebar />
       </aside>
 
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/70" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col z-10">
+          <aside className="relative w-64 bg-ink-900 border-r border-white/[0.07] flex flex-col z-10">
             <Sidebar />
           </aside>
         </div>
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="lg:hidden bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center gap-3">
+        <div className="lg:hidden bg-ink-900 border-b border-white/[0.07] px-4 py-3 flex items-center gap-3">
           <button onClick={() => setSidebarOpen(true)} className="text-zinc-400">
             <Menu size={22} />
           </button>
-          <span className="font-bold text-white">PY Fitness Admin</span>
+          <Logo to="/admin/dashboard" suffix="Admin" />
         </div>
 
-        <main className="flex-1 overflow-y-auto bg-zinc-950">
+        <main className="flex-1 overflow-y-auto bg-ink-950">
           <Outlet />
         </main>
       </div>

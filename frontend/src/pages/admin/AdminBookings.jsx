@@ -32,12 +32,12 @@ export default function AdminBookings() {
     b.session?.title?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" /></div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white">All Bookings</h1>
+        <h1 className="page-title">All Bookings</h1>
         <p className="text-zinc-500 mt-1">{bookings.length} total bookings</p>
       </div>
 
@@ -49,19 +49,19 @@ export default function AdminBookings() {
       <div className="card overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-800 border-b border-zinc-700">
+            <thead className="bg-white/[0.04] border-b border-white/10">
               <tr>
                 {['Member', 'Session', 'Date & Time', 'Status', 'Booked At'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-white/[0.07]">
               {filtered.map(b => (
-                <tr key={b.id} className="hover:bg-zinc-800 transition-colors">
+                <tr key={b.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-cyan-500 text-black rounded-full flex items-center justify-center text-xs font-bold">
+                      <div className="w-7 h-7 bg-brand-500 text-black rounded-full flex items-center justify-center text-xs font-bold">
                         {b.member?.name?.charAt(0)}
                       </div>
                       <div>

@@ -43,11 +43,17 @@ export const userAPI = {
   generateCustomPlan: (selectedFoodIds) => api.post('/users/generate-custom-plan', { selectedFoodIds }),
   logWeight: (weight, note) => api.post('/users/weight-log', { weight, note }),
   getWeightLogs: () => api.get('/users/weight-log'),
+  getAchievements: () => api.get('/users/achievements'),
 };
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
+  getAnalytics: () => api.get('/admin/analytics'),
+  // Leads
+  getLeads: () => api.get('/admin/leads'),
+  updateLead: (id, status) => api.put(`/admin/leads/${id}`, { status }),
+  deleteLead: (id) => api.delete(`/admin/leads/${id}`),
   // Members
   getMembers: () => api.get('/admin/members'),
   getMember: (id) => api.get(`/admin/members/${id}`),
@@ -78,6 +84,11 @@ export const adminAPI = {
 // ─── Sessions (member view) ───────────────────────────────────────────────────
 export const sessionAPI = {
   getUpcoming: () => api.get('/sessions'),
+  getPublic: () => api.get('/sessions/public'),
+};
+
+export const leadAPI = {
+  create: (data) => api.post('/leads', data),
 };
 
 // ─── Bookings ────────────────────────────────────────────────────────────────
@@ -106,6 +117,9 @@ export const notificationAPI = {
 export const membershipAPI = {
   getPublicPlans: () => api.get('/memberships/public'),
   getMyMembership: () => api.get('/memberships/my'),
+  subscribe: (planId) => api.post('/memberships/subscribe', { planId }),
+  cancel: () => api.post('/memberships/cancel'),
+  getPayments: () => api.get('/memberships/payments'),
   getAllPlans: () => api.get('/memberships'),
   createPlan: (data) => api.post('/memberships', data),
   updatePlan: (id, data) => api.put(`/memberships/${id}`, data),

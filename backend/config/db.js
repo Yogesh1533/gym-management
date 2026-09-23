@@ -33,6 +33,22 @@ const sequelize = dialect === 'sqlite'
       }
     );
 
+// sync() creates missing tables but never changes existing ones. Add any columns
+// introduced by newer versions of a model so older databases keep working.
+const addMissingColumns = async () => {
+  const qi = sequelize.getQueryInterface();
+  for (const model of Object.values(sequelize.models)) {
+    const table = model.getTableName();
+    const existing = await qi.describeTable(table);
+    for (const [name, attr] of Object.entries(model.rawAttributes)) {
+      const column = attr.field || name;
+      if (existing[column]) continue;
+      await qi.addColumn(table, column, { type: attr.type, allowNull: true, defaultValue: attr.defaultValue });
+      if (!isProd) console.log(`Added column ${table}.${column}`);
+    }
+  }
+};
+
 const connectDB = async () => {
   try {
     if (dialect === 'sqlite') {
@@ -46,6 +62,7 @@ const connectDB = async () => {
     }
     if (!isProd) console.log(`Database connected (${dialect})`);
     await sequelize.sync({ alter: false });
+    await addMissingColumns();
     if (!isProd) console.log('Tables synced');
   } catch (error) {
     console.error('DB Connection Error:', error.message);

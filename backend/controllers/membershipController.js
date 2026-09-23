@@ -2,6 +2,58 @@ const { Op } = require('sequelize');
 const MembershipPlan = require('../models/MembershipPlan');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
+const Payment = require('../models/Payment');
+const Notification = require('../models/Notification');
+
+const addPeriod = (cycle) => {
+  const d = new Date();
+  if (cycle === 'yearly') d.setFullYear(d.getFullYear() + 1);
+  else d.setMonth(d.getMonth() + 1);
+  return d.toISOString().split('T')[0];
+};
+
+// Demo checkout: records a payment and activates the plan. No card is charged or stored.
+const subscribe = async (req, res) => {
+  try {
+    const plan = await MembershipPlan.findOne({ where: { id: req.body.planId, isActive: true } });
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+    if (req.user.membershipPlanId === plan.id)
+      return res.status(400).json({ message: `You are already on the ${plan.name} plan` });
+
+    const periodEnd = addPeriod(plan.billingCycle);
+    const reference = `PYF-${Date.now().toString(36).toUpperCase()}-${req.user.id}`;
+    const payment = await Payment.create({
+      userId: req.user.id, membershipPlanId: plan.id, amount: plan.price, reference, periodEnd
+    });
+    await User.update({ membershipPlanId: plan.id, membershipRenewsAt: periodEnd }, { where: { id: req.user.id } });
+    await Notification.create({
+      recipientId: req.user.id,
+      title: `Welcome to ${plan.name}!`,
+      message: `Your ${plan.name} membership is active until ${periodEnd}. Receipt ${reference}.`,
+      type: 'general'
+    });
+    res.status(201).json({ message: `${plan.name} membership activated`, payment, plan, renewsAt: periodEnd });
+  } catch (err) { res.status(500).json({ message: 'Checkout failed. Please try again.' }); }
+};
+
+const cancelMembership = async (req, res) => {
+  try {
+    if (!req.user.membershipPlanId) return res.status(400).json({ message: 'You have no active membership' });
+    await User.update({ membershipPlanId: null, membershipRenewsAt: null }, { where: { id: req.user.id } });
+    res.json({ message: 'Membership cancelled' });
+  } catch (err) { res.status(500).json({ message: 'Failed to cancel membership' }); }
+};
+
+const getMyPayments = async (req, res) => {
+  try {
+    const payments = await Payment.findAll({
+      where: { userId: req.user.id },
+      include: [{ model: MembershipPlan, as: 'plan', attributes: ['name', 'tier', 'billingCycle'] }],
+      order: [['createdAt', 'DESC'], ['id', 'DESC']]
+    });
+    res.json(payments);
+  } catch (err) { res.status(500).json({ message: 'Failed to fetch payments' }); }
+};
 
 const getPlans = async (req, res) => {
   try {
@@ -67,8 +119,8 @@ const getMyMembership = async (req, res) => {
       });
       sessionsRemaining = Math.max(0, plan.sessionLimit - sessionsUsed);
     }
-    res.json({ plan, sessionsUsed, sessionsRemaining });
+    res.json({ plan, sessionsUsed, sessionsRemaining, renewsAt: user.membershipRenewsAt });
   } catch (err) { res.status(500).json({ message: 'Failed to fetch membership' }); }
 };
 
-module.exports = { getPlans, getAllPlans, createPlan, updatePlan, deletePlan, assignPlan, getMyMembership };
+module.exports = { getPlans, getAllPlans, createPlan, updatePlan, deletePlan, assignPlan, getMyMembership, subscribe, cancelMembership, getMyPayments };

@@ -6,12 +6,12 @@ import toast from 'react-hot-toast';
 
 const EMPTY = {
   name: '', tier: 'basic', price: 29, billingCycle: 'monthly',
-  sessionLimit: 2, features: [], color: '#06b6d4', isActive: true
+  sessionLimit: 2, features: [], color: '#d9b465', isActive: true
 };
 
 const tierColors = {
   basic:    'bg-zinc-500/10 text-zinc-400',
-  standard: 'bg-cyan-500/10 text-cyan-400',
+  standard: 'bg-brand-500/10 text-brand-400',
   premium:  'bg-purple-500/10 text-purple-400',
   annual:   'bg-yellow-500/10 text-yellow-400',
 };
@@ -85,7 +85,7 @@ export default function AdminMemberships() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" />
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" />
     </div>
   );
 
@@ -93,7 +93,7 @@ export default function AdminMemberships() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Membership Plans</h1>
+          <h1 className="page-title">Membership Plans</h1>
           <p className="text-zinc-500 mt-1">{plans.length} plans · {members.length} members</p>
         </div>
         <div className="flex gap-3">
@@ -146,19 +146,19 @@ export default function AdminMemberships() {
 
       {/* Members with their plans */}
       <div className="card">
-        <h2 className="font-bold text-white mb-4 flex items-center gap-2"><Users size={18} className="text-cyan-400" /> Member Memberships</h2>
+        <h2 className="font-bold text-white mb-4 flex items-center gap-2"><Users size={18} className="text-brand-400" /> Member Memberships</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-800 border-b border-zinc-700">
+            <thead className="bg-white/[0.04] border-b border-white/10">
               <tr>
                 {['Member', 'Email', 'Current Plan', 'Tier', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-zinc-400 uppercase">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-white/[0.07]">
               {members.map(m => (
-                <tr key={m.id} className="hover:bg-zinc-800 transition-colors">
+                <tr key={m.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-white font-medium">{m.name}</td>
                   <td className="px-4 py-3 text-zinc-400">{m.email}</td>
                   <td className="px-4 py-3 text-zinc-300">{m.membershipPlan?.name || <span className="text-zinc-600">No plan</span>}</td>
@@ -170,7 +170,7 @@ export default function AdminMemberships() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => { setAssignForm({ memberId: m.id, planId: m.membershipPlanId || '' }); setAssignModal(true); }}
-                      className="text-xs text-cyan-400 hover:underline"
+                      className="text-xs text-brand-400 hover:underline"
                     >
                       Change Plan
                     </button>

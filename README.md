@@ -265,6 +265,18 @@ gym-management/
 
 ## ✨ Key Features
 
+**New in the premium redesign**
+- **Premium dark & gold design system**: Sora/Inter/Fraunces type, a shared set of components, and layouts that work on mobile
+- **Public landing page** with a live class schedule, coach profiles, membership preview and FAQ
+- **Free-trial lead capture**: visitors submit the form, and admins manage leads at `/admin/leads` (new → contacted → converted)
+- **Membership checkout (demo)**: choose, upgrade or cancel a plan; payment receipts and billing history under Profile → Membership & billing. No real payments are taken and no card details are collected
+- **Admin analytics**: revenue trend, bookings per day, popular classes, members by plan, attendance rate
+- **Achievements**: 10 badges earned from real activity (bookings, attendance, weight logs, plans)
+- **Weekly calendar view** for booking classes
+- Gym contact details shown on the site live in `frontend/src/config/site.js` (placeholders; replace with your own)
+
+**Core**
+
 - **JWT Auth** — Secure login with role-based access (admin vs member)
 - **Dark Theme** — Full black/grey UI with cyan accents
 - **Member Dashboard** — Shows assigned workout plan, diet plan, and upcoming bookings

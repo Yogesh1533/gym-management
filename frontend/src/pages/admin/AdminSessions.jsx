@@ -17,7 +17,7 @@ const typeColors = {
   cardio:   'bg-emerald-500/10 text-emerald-400',
   pilates:  'bg-pink-500/10 text-pink-400',
   crossfit: 'bg-orange-500/10 text-orange-400',
-  general:  'bg-zinc-700 text-zinc-300',
+  general:  'bg-white/10 text-zinc-300',
 };
 
 export default function AdminSessions() {
@@ -70,13 +70,13 @@ export default function AdminSessions() {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" /></div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Training Sessions</h1>
+          <h1 className="page-title">Training Sessions</h1>
           <p className="text-zinc-500 mt-1">{sessions.length} sessions total</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
@@ -99,8 +99,8 @@ export default function AdminSessions() {
               <p>👥 {s.bookedSlots}/{s.totalSlots} booked</p>
             </div>
             <div className="mb-4">
-              <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                <div className="bg-cyan-500 h-1.5 rounded-full transition-all"
+              <div className="w-full bg-white/[0.04] rounded-full h-1.5">
+                <div className="bg-brand-500 h-1.5 rounded-full transition-all"
                   style={{ width: `${Math.min((s.bookedSlots / s.totalSlots) * 100, 100)}%` }} />
               </div>
             </div>
