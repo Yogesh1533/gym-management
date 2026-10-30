@@ -267,7 +267,7 @@ export default function AdminWorkoutPlans() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500" />
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500" />
     </div>
   );
 
@@ -275,7 +275,7 @@ export default function AdminWorkoutPlans() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Workout Plans</h1>
+          <h1 className="page-title">Workout Plans</h1>
           <p className="text-zinc-500 mt-1">{plans.length} plans available</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
@@ -292,8 +292,8 @@ export default function AdminWorkoutPlans() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <h3 className="font-bold text-white text-lg">{p.title}</h3>
                   <span className={`badge ${levelColors[p.level]} capitalize text-xs`}>{p.level}</span>
-                  <span className="badge bg-cyan-500/10 text-cyan-400 text-xs capitalize">{p.goal?.replace(/_/g, ' ')}</span>
-                  <span className="badge bg-zinc-700 text-zinc-300 text-xs">{p.durationWeeks} weeks</span>
+                  <span className="badge bg-brand-500/10 text-brand-400 text-xs capitalize">{p.goal?.replace(/_/g, ' ')}</span>
+                  <span className="badge bg-white/10 text-zinc-300 text-xs">{p.durationWeeks} weeks</span>
                   <span className="badge bg-blue-500/10 text-blue-400 text-xs">{p.schedule?.length || 0} days/week</span>
                 </div>
                 <p className="text-sm text-zinc-500 mt-1">{p.description}</p>
@@ -316,26 +316,26 @@ export default function AdminWorkoutPlans() {
 
             {/* Expanded Schedule */}
             {expandedPlan === p.id && p.schedule?.length > 0 && (
-              <div className="mt-4 space-y-3 border-t border-zinc-800 pt-4">
+              <div className="mt-4 space-y-3 border-t border-white/[0.07] pt-4">
                 {p.schedule.map((day, di) => (
-                  <div key={di} className="bg-zinc-800 rounded-xl overflow-hidden">
+                  <div key={di} className="bg-white/[0.04] rounded-xl overflow-hidden">
                     <button
                       onClick={() => setExpandedDay(expandedDay === `${p.id}-${di}` ? null : `${p.id}-${di}`)}
                       className="w-full flex items-center justify-between px-4 py-3 text-left"
                     >
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-white">{day.day}</span>
-                        <span className="text-xs text-zinc-400 bg-zinc-700 px-2 py-0.5 rounded-full">{day.focus}</span>
+                        <span className="text-xs text-zinc-400 bg-white/10 px-2 py-0.5 rounded-full">{day.focus}</span>
                         <span className="text-xs text-zinc-500">{day.exercises?.length} exercises</span>
                       </div>
                       {expandedDay === `${p.id}-${di}` ? <ChevronUp size={14} className="text-zinc-400" /> : <ChevronDown size={14} className="text-zinc-400" />}
                     </button>
                     {expandedDay === `${p.id}-${di}` && (
-                      <div className="px-4 pb-3 space-y-2 border-t border-zinc-700">
+                      <div className="px-4 pb-3 space-y-2 border-t border-white/10">
                         {day.exercises?.map((ex, ei) => (
-                          <div key={ei} className="flex items-center justify-between text-sm py-1.5 border-b border-zinc-700 last:border-0">
+                          <div key={ei} className="flex items-center justify-between text-sm py-1.5 border-b border-white/10 last:border-0">
                             <span className="text-white font-medium w-40">{ex.name}</span>
-                            <span className="text-cyan-400 text-xs">
+                            <span className="text-brand-400 text-xs">
                               {ex.duration ? ex.duration : `${ex.sets} sets × ${ex.reps} reps`}
                             </span>
                             {ex.notes && <span className="text-zinc-500 text-xs italic">{ex.notes}</span>}
@@ -399,7 +399,7 @@ export default function AdminWorkoutPlans() {
                     key={d} type="button"
                     onClick={() => handleGymDaysChange(d)}
                     className={`w-9 h-9 rounded-lg text-sm font-bold transition-colors ${
-                      form.gymDays === d ? 'bg-cyan-500 text-black' : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600'
+                      form.gymDays === d ? 'bg-brand-500 text-black' : 'bg-white/10 text-zinc-400 hover:bg-zinc-600'
                     }`}
                   >
                     {d}
@@ -415,8 +415,8 @@ export default function AdminWorkoutPlans() {
               <label className="label">Weekly Schedule ({form.schedule.length} days)</label>
               <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                 {form.schedule.map((day, di) => (
-                  <div key={di} className="bg-zinc-800 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-700">
+                  <div key={di} className="bg-white/[0.04] rounded-xl overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
                       <span className="font-semibold text-white text-sm">{day.day}</span>
                       <span className="text-xs text-zinc-400">{day.focus}</span>
                     </div>
@@ -453,7 +453,7 @@ export default function AdminWorkoutPlans() {
                       <button
                         type="button"
                         onClick={() => addExercise(di)}
-                        className="text-xs text-cyan-400 hover:underline mt-1"
+                        className="text-xs text-brand-400 hover:underline mt-1"
                       >
                         + Add Exercise
                       </button>

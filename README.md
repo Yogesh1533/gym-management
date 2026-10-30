@@ -11,7 +11,7 @@ Designed as a university capstone project demonstrating a production-ready web a
 |------------|-------------------------------------|
 | Frontend   | React.js + Tailwind CSS             |
 | Backend    | Node.js + Express.js                |
-| Database   | MySQL + Sequelize ORM               |
+| Database   | MySQL or SQLite + Sequelize ORM     |
 | Auth       | JWT + bcrypt                        |
 | HTTP       | Axios                               |
 | Toasts     | react-hot-toast                     |
@@ -28,7 +28,32 @@ Designed as a university capstone project demonstrating a production-ready web a
 
 ---
 
-## 🚀 How to Run
+## ☁️ Live on AWS (free tier)
+
+One command deploys the app to a single free-tier EC2 server, with HTTPS and a $0.01 billing alarm.
+See **[deploy/aws/README.md](deploy/aws/README.md)**.
+
+---
+
+## ⚡ Quick Start (no MySQL needed)
+
+```bash
+cd backend && npm install
+printf 'DB_DIALECT=sqlite\nJWT_SECRET=dev_secret\nAUTO_SEED=true\n' > .env
+npm start                       # API on http://localhost:5000, demo data seeded automatically
+
+cd ../frontend && npm install && npm start   # app on http://localhost:3000
+```
+
+> **Newer npm (v11+) blocks install scripts.** If `npm start` fails with *"Could not locate the bindings file"* for sqlite3, run
+> `npm install-scripts approve sqlite3 && npm rebuild sqlite3` in `backend/`.
+> **On macOS**, port 5000 is taken by AirPlay Receiver (the browser shows "Access denied"), so add `PORT=5050` to `backend/.env`.
+
+For a production-style single server, run `npm run build` in `frontend/`. The backend then serves the built app itself at http://localhost:5000.
+
+---
+
+## 🚀 How to Run (MySQL)
 
 ### Prerequisites
 - Node.js v18+
@@ -239,6 +264,18 @@ gym-management/
 ---
 
 ## ✨ Key Features
+
+**New in the premium redesign**
+- **Premium dark & gold design system**: Sora/Inter/Fraunces type, a shared set of components, and layouts that work on mobile
+- **Public landing page** with a live class schedule, coach profiles, membership preview and FAQ
+- **Free-trial lead capture**: visitors submit the form, and admins manage leads at `/admin/leads` (new → contacted → converted)
+- **Membership checkout (demo)**: choose, upgrade or cancel a plan; payment receipts and billing history under Profile → Membership & billing. No real payments are taken and no card details are collected
+- **Admin analytics**: revenue trend, bookings per day, popular classes, members by plan, attendance rate
+- **Achievements**: 10 badges earned from real activity (bookings, attendance, weight logs, plans)
+- **Weekly calendar view** for booking classes
+- Gym contact details shown on the site live in `frontend/src/config/site.js` (placeholders; replace with your own)
+
+**Core**
 
 - **JWT Auth** — Secure login with role-based access (admin vs member)
 - **Dark Theme** — Full black/grey UI with cyan accents

@@ -12,6 +12,8 @@ const WeightLog      = require('../models/WeightLog');
 const Rating         = require('../models/Rating');
 const Waitlist       = require('../models/Waitlist');
 const MembershipPlan = require('../models/MembershipPlan');
+const Payment        = require('../models/Payment');
+require('../models/Lead');
 
 // User belongs to plans
 User.belongsTo(WorkoutPlan,    { foreignKey: 'workoutPlanId',    as: 'workoutPlan' });
@@ -60,5 +62,10 @@ Session.hasMany(Waitlist,   { foreignKey: 'sessionId' });
 
 // Membership Plans
 MembershipPlan.hasMany(User, { foreignKey: 'membershipPlanId' });
+
+// Payments
+Payment.belongsTo(User,           { foreignKey: 'userId',           as: 'user' });
+Payment.belongsTo(MembershipPlan, { foreignKey: 'membershipPlanId', as: 'plan' });
+User.hasMany(Payment,             { foreignKey: 'userId' });
 
 module.exports = {};

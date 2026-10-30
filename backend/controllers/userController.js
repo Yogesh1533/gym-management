@@ -26,7 +26,16 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, phone, age, weight, height, fitnessGoal } = req.body;
+    const { name, phone, fitnessGoal } = req.body;
+    // Empty form fields arrive as '' — store them as null rather than invalid numbers
+    const num = (v, parse) => (v === undefined ? undefined : v === '' || v === null ? null : parse(v));
+    const age    = num(req.body.age, parseInt);
+    const weight = num(req.body.weight, parseFloat);
+    const height = num(req.body.height, parseFloat);
+    if (name !== undefined && !String(name).trim())
+      return res.status(400).json({ message: 'Name is required' });
+    if ([age, weight, height].some(v => v !== undefined && v !== null && Number.isNaN(v)))
+      return res.status(400).json({ message: 'Age, weight and height must be numbers' });
     await User.update({ name, phone, age, weight, height, fitnessGoal }, { where: { id: req.user.id } });
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ['password'] },
@@ -106,6 +115,50 @@ const generatePlan = async (req, res) => {
 
 const getFoods = (req, res) => res.json(FOOD_DATABASE);
 
+// Badges computed from the member's activity — nothing extra to store
+const getAchievements = async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const Session = require('../models/Session');
+    const MembershipPlan = require('../models/MembershipPlan');
+    const [user, bookings, weightLogs] = await Promise.all([
+      User.findByPk(req.user.id, { include: [{ model: MembershipPlan, as: 'membershipPlan', required: false }] }),
+      Booking.findAll({
+        where: { memberId: req.user.id },
+        include: [{ model: Session, as: 'session', attributes: ['sessionType'] }]
+      }),
+      WeightLog.count({ where: { userId: req.user.id } }),
+    ]);
+    const active   = bookings.filter(b => b.status !== 'cancelled');
+    const attended = bookings.filter(b => b.status === 'attended').length;
+    const types    = new Set(active.map(b => b.session?.sessionType).filter(Boolean)).size;
+    const profileFields = [user.age, user.weight, user.height, user.phone].filter(Boolean).length;
+    const hasPlans = (user.workoutPlanId ? 1 : 0) + (user.dietPlanId ? 1 : 0);
+    const tier = user.membershipPlan?.tier;
+
+    const badge = (id, title, description, icon, current, target) => ({
+      id, title, description, icon,
+      current: Math.min(current, target), target, earned: current >= target
+    });
+
+    const achievements = [
+      badge('first_step',  'First Step',     'Book your first session',             'flag',     active.length, 1),
+      badge('regular',     'Regular',        'Book 5 sessions',                     'calendar', active.length, 5),
+      badge('committed',   'Committed',      'Book 10 sessions',                    'flame',    active.length, 10),
+      badge('showed_up',   'Showed Up',      'Attend your first session',           'check',    attended, 1),
+      badge('iron_will',   'Iron Will',      'Attend 5 sessions',                   'dumbbell', attended, 5),
+      badge('explorer',    'Explorer',       'Try 3 different class types',         'compass',  types, 3),
+      badge('tracker',     'Data Driven',    'Log your weight 3 times',             'chart',    weightLogs, 3),
+      badge('planner',     'Game Plan',      'Get a workout and a diet plan',       'target',   hasPlans, 2),
+      badge('profile_pro', 'All Set',        'Complete your profile',               'user',     profileFields, 4),
+      badge('elite',       'Elite Member',   'Join the Elite or Pro Annual plan',   'crown',    ['premium', 'annual'].includes(tier) ? 1 : 0, 1),
+    ];
+    res.json({ achievements, earned: achievements.filter(a => a.earned).length, total: achievements.length });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch achievements' });
+  }
+};
+
 const logWeight = async (req, res) => {
   try {
     const { weight, note } = req.body;
@@ -170,4 +223,4 @@ const generateCustomPlan = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, changePassword, generatePlan, getFoods, generateCustomPlan, logWeight, getWeightLogs };
+module.exports = { getProfile, updateProfile, changePassword, generatePlan, getFoods, generateCustomPlan, logWeight, getWeightLogs, getAchievements };

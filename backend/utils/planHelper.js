@@ -54,15 +54,18 @@ const getWorkoutPlanWithSchedule = async (planId) => {
   return formatWorkoutPlan(plan);
 };
 
+// `order` inside an include is ignored by Sequelize, so sort nested rows here
+const byOrder = (items) => [...(items || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
 // Format workout plan to match old JSON shape (for frontend compatibility)
 const formatWorkoutPlan = (plan) => {
   const p = plan.toJSON ? plan.toJSON() : plan;
   return {
     ...p,
-    schedule: (p.days || []).map(day => ({
+    schedule: byOrder(p.days).map(day => ({
       day:       day.day,
       focus:     day.focus,
-      exercises: (day.exercises || []).map(ex => ({
+      exercises: byOrder(day.exercises).map(ex => ({
         name:     ex.name,
         sets:     ex.sets,
         reps:     ex.reps,
@@ -128,10 +131,10 @@ const formatDietPlan = (plan) => {
   const p = plan.toJSON ? plan.toJSON() : plan;
   return {
     ...p,
-    meals: (p.meals || []).map(meal => ({
+    meals: byOrder(p.meals).map(meal => ({
       mealType:      meal.mealType,
       totalCalories: meal.totalCalories,
-      foods: (meal.foods || []).map(food => ({
+      foods: byOrder(meal.foods).map(food => ({
         name:     food.name,
         quantity: food.quantity,
         calories: food.calories,

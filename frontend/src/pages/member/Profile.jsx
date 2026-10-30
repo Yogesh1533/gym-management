@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI } from '../../services/api';
 import { sanitizeObject } from '../../utils/sanitize';
-import { User, Lock, Save } from 'lucide-react';
+import { User, Lock, Save, CreditCard } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import BillingPanel from '../../components/member/BillingPanel';
 import toast from 'react-hot-toast';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
-  const [tab, setTab] = useState('profile');
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState(params.get('tab') === 'billing' ? 'billing' : 'profile');
   const [form, setForm] = useState({
     name: user?.name || '', phone: user?.phone || '',
     age: user?.age || '', weight: user?.weight || '',
@@ -50,30 +53,32 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-6">My Profile</h1>
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <h1 className="page-title mb-6">My Profile</h1>
 
       <div className="card mb-6 flex items-center gap-4">
-        <div className="w-16 h-16 bg-cyan-500 text-black rounded-full flex items-center justify-center text-2xl font-bold">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-300 to-brand-600 text-ink-950 flex items-center justify-center font-display text-2xl font-bold">
           {user?.name?.charAt(0).toUpperCase()}
         </div>
         <div>
           <p className="font-bold text-white text-lg">{user?.name}</p>
           <p className="text-zinc-500 text-sm">{user?.email}</p>
-          <span className="badge bg-cyan-500/10 text-cyan-400 mt-1 capitalize">{user?.role}</span>
+          <span className="badge bg-brand-500/10 text-brand-400 mt-1 capitalize">{user?.role}</span>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        {[['profile', 'Profile Info', User], ['password', 'Change Password', Lock]].map(([key, label, Icon]) => (
-          <button key={key} onClick={() => setTab(key)}
+      <div className="mb-6 inline-flex flex-wrap gap-1 rounded-xl border hairline bg-white/[0.02] p-1" role="tablist">
+        {[['profile', 'Profile', User], ['billing', 'Membership & billing', CreditCard], ['password', 'Password', Lock]].map(([key, label, Icon]) => (
+          <button key={key} onClick={() => setTab(key)} role="tab" aria-selected={tab === key}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === key ? 'bg-cyan-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+              tab === key ? 'bg-white/10 text-white shadow-soft' : 'text-zinc-400 hover:text-white'
             }`}>
-            <Icon size={15} />{label}
+            <Icon size={15} className={tab === key ? 'text-brand-300' : ''} />{label}
           </button>
         ))}
       </div>
+
+      {tab === 'billing' && <BillingPanel />}
 
       {tab === 'profile' && (
         <form onSubmit={handleProfileSave} className="card space-y-4">

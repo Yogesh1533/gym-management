@@ -33,16 +33,16 @@ export default function AdminNotifications() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Send Notifications</h1>
+        <h1 className="page-title">Send Notifications</h1>
         <p className="text-zinc-500 mt-1">Send in-app notifications to members.</p>
       </div>
 
       <div className="card mb-6">
-        <h2 className="font-semibold text-white mb-3 flex items-center gap-2"><Bell size={16} className="text-cyan-400" /> Quick Templates</h2>
+        <h2 className="font-semibold text-white mb-3 flex items-center gap-2"><Bell size={16} className="text-brand-400" /> Quick Templates</h2>
         <div className="flex flex-wrap gap-2">
           {templates.map(t => (
             <button key={t.label} onClick={() => setForm({ ...form, title: t.title, message: t.message, type: t.type })}
-              className="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-3 py-1.5 rounded-lg hover:bg-cyan-500/20 transition-colors">
+              className="text-xs bg-brand-500/10 text-brand-400 border border-brand-500/20 px-3 py-1.5 rounded-lg hover:bg-brand-500/20 transition-colors">
               {t.label}
             </button>
           ))}

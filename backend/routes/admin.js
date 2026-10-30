@@ -6,13 +6,20 @@ const {
   getWorkoutPlans, createWorkoutPlan, updateWorkoutPlan, deleteWorkoutPlan,
   getDietPlans, createDietPlan, updateDietPlan, deleteDietPlan,
   getSessions, createSession, updateSession, deleteSession,
-  getAllBookings, getDashboardStats, sendNotification, markAttended
+  getAllBookings, getDashboardStats, sendNotification, markAttended, getAnalytics
 } = require('../controllers/adminController');
+const { getLeads, updateLead, deleteLead } = require('../controllers/leadController');
 
 // All admin routes require auth + admin role
 router.use(protect, adminOnly);
 
 router.get('/dashboard', getDashboardStats);
+router.get('/analytics', getAnalytics);
+
+// Free-trial leads
+router.get('/leads', getLeads);
+router.put('/leads/:id', updateLead);
+router.delete('/leads/:id', deleteLead);
 
 // Members
 router.get('/members', getMembers);
